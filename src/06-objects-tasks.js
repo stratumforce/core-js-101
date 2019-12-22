@@ -114,40 +114,81 @@ function fromJSON(proto, json) {
 
 const cssSelectorBuilder = {
   selector: '',
+  order: -1,
+  duplicationError:
+    'Element, id and pseudo-element should not occur more then one time inside the selector',
+  orderError:
+    'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element',
+
+  validateOrder(order) {
+    if (this.order > order) throw new Error(this.orderError);
+    if (this.order === order && [0, 1, 5].includes(order)) throw new Error(this.duplicationError);
+  },
 
   element(value) {
-    this.selector = `${this.selector}${value}`;
-    return this;
+    const order = 0;
+    this.validateOrder(order);
+
+    const selector = `${this.selector}${value}`;
+
+    return { ...cssSelectorBuilder, selector, order };
   },
 
   id(value) {
-    this.selector = `${this.selector}#${value}`;
-    return this;
+    const order = 1;
+    this.validateOrder(order);
+
+    const selector = `${this.selector}#${value}`;
+
+    return { ...cssSelectorBuilder, selector, order };
   },
 
   class(value) {
-    this.selector = `${this.selector}.${value}`;
-    return this;
+    const order = 2;
+    this.validateOrder(order);
+
+    const selector = `${this.selector}.${value}`;
+
+    return { ...cssSelectorBuilder, selector, order };
   },
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  attr(value) {
+    const order = 3;
+    this.validateOrder(order);
+
+    const selector = `${this.selector}[${value}]`;
+
+    return { ...cssSelectorBuilder, selector, order };
   },
 
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
+  pseudoClass(value) {
+    const order = 4;
+    this.validateOrder(order);
+
+    const selector = `${this.selector}:${value}`;
+
+    return { ...cssSelectorBuilder, selector, order };
   },
 
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
+  pseudoElement(value) {
+    const order = 5;
+    this.validateOrder(order);
+
+    const selector = `${this.selector}::${value}`;
+
+    return { ...cssSelectorBuilder, selector, order };
   },
 
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  combine(selector1, combinator, selector2) {
+    const selector = `${selector1.stringify()} ${combinator} ${selector2.stringify()}`;
+    return { ...cssSelectorBuilder, selector };
   },
 
   stringify() {
-    return this.selector;
+    const { selector } = this;
+    this.selector = '';
+
+    return selector;
   },
 };
 
